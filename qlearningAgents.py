@@ -17,7 +17,7 @@ from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
 
-import random,util,math
+import random, util, math
 
 class QLearningAgent(ReinforcementAgent):
     """
@@ -44,6 +44,11 @@ class QLearningAgent(ReinforcementAgent):
         ReinforcementAgent.__init__(self, **args)
 
         "*** YOUR CODE HERE ***"
+        # Will use counter(Map) with key as State + Action, Value as value
+        self.Q = util.Counter()
+        
+        
+
 
     def getQValue(self, state, action):
         """
@@ -52,7 +57,11 @@ class QLearningAgent(ReinforcementAgent):
           or the Q node value otherwise
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        if (state, action) in self.Q:
+            return self.Q[(state, action)]
+        else:
+            return 0.0
 
 
     def computeValueFromQValues(self, state):
@@ -63,8 +72,11 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
 
+        action, actionValue = self.computeOptimalActionBasedOnQValues(state)
+        
+        return actionValue
+        
     def computeActionFromQValues(self, state):
         """
           Compute the best action to take in a state.  Note that if there
@@ -72,7 +84,31 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        action, actionValue = self.computeOptimalActionBasedOnQValues(state)
+
+        return action
+
+    def computeOptimalActionBasedOnQValues(self, state):
+        """
+        Util function. Goofy to compute them seperately, avoids code duplication. Used by other methods
+        """
+        availableActions = self.getLegalActions(state)
+        
+        bestAction = ''
+        bestActionValue = -float("inf")
+        
+        for action in availableActions:
+            actionValue = self.Q[(state, action)]
+            
+            # Notes advice selecting randomly from ties. Maybe implement in the future
+            if(actionValue >= bestActionValue):
+                bestAction = action
+                bestActionValue = actionValue
+            
+        if bestActionValue == -float("inf"):
+            return (None, 0.0)
+        
+        return (bestAction, bestActionValue)
 
     def getAction(self, state):
         """
@@ -89,7 +125,13 @@ class QLearningAgent(ReinforcementAgent):
         legalActions = self.getLegalActions(state)
         action = None
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        isExplorationDesired = util.flipCoin(self.epsilon)
+        
+        if isExplorationDesired:
+            action = random.choice(legalActions)
+        else:
+            action = self.computeActionFromQValues(state)
 
         return action
 
@@ -103,7 +145,13 @@ class QLearningAgent(ReinforcementAgent):
           it will be called on your behalf
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        oldQValue = self.Q[(state, action)]
+        # Feel like this probably has to be recursive, but I do remember him saying over and over, "one layer of expectimax"
+        sampleValue = (reward + self.discount * self.computeValueFromQValues(nextState))
+        
+        self.Q[(state, action)] = (1 - self.alpha) * oldQValue + self.alpha * sampleValue
+
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
@@ -115,7 +163,7 @@ class QLearningAgent(ReinforcementAgent):
 class PacmanQAgent(QLearningAgent):
     "Exactly the same as QLearningAgent, but with different default parameters"
 
-    def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0, **args):
+    def __init__(self, epsilon=0.05, gamma=0.8, alpha=0.2, numTraining=0, **args):
         """
         These default parameters can be changed from the pacman.py command line.
         For example, to change the exploration rate, try:
@@ -139,8 +187,8 @@ class PacmanQAgent(QLearningAgent):
         informs parent of action for Pacman.  Do not change or remove this
         method.
         """
-        action = QLearningAgent.getAction(self,state)
-        self.doAction(state,action)
+        action = QLearningAgent.getAction(self, state)
+        self.doAction(state, action)
         return action
 
 
