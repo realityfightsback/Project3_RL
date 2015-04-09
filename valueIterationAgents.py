@@ -46,6 +46,22 @@ class ValueIterationAgent(ValueEstimationAgent):
 
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        
+        iterationsCount = 0
+        
+        while iterationsCount < iterations:
+            
+            allStates = mdp.getStates()
+            #Updating shouldn't happen before we have completely finished an iteration, has side effects. 
+            V= self.values.copy()
+            for state in allStates:
+                #determine which action has the highest value
+                actionToTake = self.computeActionFromValues(state)
+                #update our V map with the best value we get
+                V[state] = self.computeVOfAction(state, actionToTake)
+                
+            self.values = V
+            iterationsCount = iterationsCount + 1
 
 
     def getValue(self, state):
@@ -61,7 +77,22 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        return 0
+        
+#         tAndRValues = self.mdp.getTransitionStatesAndProbs(state, action)
+#         
+#         for tAndR in tAndRValues:
+#             
+#         
+#         sumOfWeightRewards = 0
+#         
+#         return sumOfWeightRewards
+#         nextState = tAndRValues.getState
+#             nextStateReward = self.mdp.getReward(nextState)
+#             sumOfWeightRewards = sumOfWeightRewards + (tAndRValues.getProb * nextStateReward) + self.discount * self.getValue(nextState)
+        
+#         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
         """
@@ -73,8 +104,47 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+#Seems to just call for MAX amongst available actions from state
+        
+        if(state == 'TERMINAL_STATE'):
+            return None
 
+        bestAction = ''
+        bestActionValue = -float("inf")
+                
+        availableActions = self.mdp.getPossibleActions(state)
+        
+        for action in availableActions:
+
+            actionValue = self.computeVOfAction(state,action)           
+
+            if (actionValue >= bestActionValue):
+                bestActionValue = actionValue
+                bestAction = action 
+        
+        return bestAction 
+        
+#         util.raiseNotDefined()
+
+    def computeVOfAction (self, state, action ):
+        
+        if(state=='TERMINAL_STATE'):
+            return 0
+        
+        transitionStateAndProbs = self.mdp.getTransitionStatesAndProbs(state, action)
+            
+        actionValueStar = 0
+
+        for tStateAndProb in transitionStateAndProbs:
+            nextState, nextStateProbability = tStateAndProb
+                
+            nextStateDiscountedValue = self.discount * self.values[nextState]
+            nextStateReward = self.mdp.getReward(state, action, nextState)
+             
+            actionValueStar = actionValueStar + nextStateProbability * (nextStateReward +  nextStateDiscountedValue)
+            
+        return actionValueStar    
+        
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
 
