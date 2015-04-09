@@ -58,7 +58,7 @@ class ValueIterationAgent(ValueEstimationAgent):
                 #determine which action has the highest value
                 actionToTake = self.computeActionFromValues(state)
                 #update our V map with the best value we get
-                V[state] = self.computeVOfAction(state, actionToTake)
+                V[state] = self.getQValue(state, actionToTake)
                 
             self.values = V
             iterationsCount = iterationsCount + 1
@@ -77,22 +77,24 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
+        if(state=='TERMINAL_STATE'):
+            return 0
         
-        return 0
+        transitionStateAndProbs = self.mdp.getTransitionStatesAndProbs(state, action)
+            
+        actionValue = 0
+
+        for tStateAndProb in transitionStateAndProbs:
+            nextState, nextStateProbability = tStateAndProb
+                
+            nextStateDiscountedValue = self.discount * self.values[nextState]
+            nextStateReward = self.mdp.getReward(state, action, nextState)
+             
+            actionValue = actionValue + nextStateProbability * (nextStateReward +  nextStateDiscountedValue)
+            
+        return actionValue    
+
         
-#         tAndRValues = self.mdp.getTransitionStatesAndProbs(state, action)
-#         
-#         for tAndR in tAndRValues:
-#             
-#         
-#         sumOfWeightRewards = 0
-#         
-#         return sumOfWeightRewards
-#         nextState = tAndRValues.getState
-#             nextStateReward = self.mdp.getReward(nextState)
-#             sumOfWeightRewards = sumOfWeightRewards + (tAndRValues.getProb * nextStateReward) + self.discount * self.getValue(nextState)
-        
-#         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
         """
@@ -104,7 +106,6 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-#Seems to just call for MAX amongst available actions from state
         
         if(state == 'TERMINAL_STATE'):
             return None
@@ -116,7 +117,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         
         for action in availableActions:
 
-            actionValue = self.computeVOfAction(state,action)           
+            actionValue = self.getQValue(state,action)           
 
             if (actionValue >= bestActionValue):
                 bestActionValue = actionValue
@@ -126,25 +127,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         
 #         util.raiseNotDefined()
 
-    def computeVOfAction (self, state, action ):
-        
-        if(state=='TERMINAL_STATE'):
-            return 0
-        
-        transitionStateAndProbs = self.mdp.getTransitionStatesAndProbs(state, action)
-            
-        actionValueStar = 0
-
-        for tStateAndProb in transitionStateAndProbs:
-            nextState, nextStateProbability = tStateAndProb
                 
-            nextStateDiscountedValue = self.discount * self.values[nextState]
-            nextStateReward = self.mdp.getReward(state, action, nextState)
-             
-            actionValueStar = actionValueStar + nextStateProbability * (nextStateReward +  nextStateDiscountedValue)
-            
-        return actionValueStar    
-        
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
 
